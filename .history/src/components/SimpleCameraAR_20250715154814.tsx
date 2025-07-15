@@ -161,13 +161,13 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
       // Draw surface boundary if enough points detected
       if (surfacePoints.length > 20 && surfaceConfidence > 0.3) {
         // Group nearby points into clusters (simplified clustering)
-        const clusters: SurfacePoint[][] = [];
-        const processed = new Set<number>();
+        const clusters = [];
+        const processed = new Set();
         
         surfacePoints.forEach((point, i) => {
           if (processed.has(i)) return;
           
-          const cluster: SurfacePoint[] = [point];
+          const cluster = [point];
           processed.add(i);
           
           surfacePoints.forEach((otherPoint, j) => {
@@ -190,7 +190,7 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
         });
         
         // Draw cluster boundaries
-        clusters.forEach((cluster: SurfacePoint[]) => {
+        clusters.forEach(cluster => {
           if (cluster.length < 4) return;
           
           overlayCtx.strokeStyle = `rgba(0, 255, 0, ${surfaceConfidence})`;
@@ -198,7 +198,7 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
           overlayCtx.setLineDash([5, 5]);
           
           overlayCtx.beginPath();
-          cluster.forEach((point: SurfacePoint, i: number) => {
+          cluster.forEach((point, i) => {
             const x = point.x * overlayCanvas.width;
             const y = point.y * overlayCanvas.height;
             
