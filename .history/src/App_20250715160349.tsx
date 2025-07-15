@@ -135,24 +135,12 @@ function App() {
           {isCheckingAR ? (
             <LoadingSpinner size="lg" message="Checking camera access..." />
           ) : isARSupported ? (
-            <div className="flex justify-center space-x-4">
-              {isWebXRSupported && (
-                <button
-                  onClick={() => startAR('webxr')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center space-x-2"
-                >
-                  <Zap className="h-5 w-5" />
-                  <span>WebXR AR</span>
-                </button>
-              )}
-              <button
-                onClick={() => startAR('camera')}
-                className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center space-x-2"
-              >
-                <Eye className="h-5 w-5" />
-                <span>Camera AR</span>
-              </button>
-            </div>
+            <button
+              onClick={startAR}
+              className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
+            >
+              Start Camera AR
+            </button>
           ) : (
             <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 max-w-md mx-auto">
               <p className="text-yellow-800">

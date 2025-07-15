@@ -3,7 +3,15 @@
   "description": "Augmented Reality Restaurant Menu - Experience dining in a new dimension",
   "version": "1.0.0",
   "type": "module",
-  "keywords": ["react", "typescript", "ar", "webxr", "restaurant", "menu", "three.js"],
+  "keywords": [
+    "react",
+    "typescript",
+    "ar",
+    "webxr",
+    "restaurant",
+    "menu",
+    "three.js"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "scripts": {
@@ -15,6 +23,7 @@
   "dependencies": {
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
+    "@types/webxr": "^0.5.22",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
