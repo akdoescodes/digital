@@ -103,7 +103,7 @@ function App() {
               onClick={startAR}
               className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
-              Start Camera AR
+              Start AR Experience
             </button>
           ) : (
             <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 max-w-md mx-auto">

@@ -56,7 +56,7 @@ function App() {
   if (isARActive) {
     return (
       <div className="fixed inset-0 bg-black">
-        <SimpleCameraAR onClose={stopAR} menuItems={menuItems} />
+        <WebARMenu onClose={stopAR} menuItems={menuItems} />
       </div>
     );
   }
@@ -78,7 +78,7 @@ function App() {
                   className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
                 >
                   <Eye className="h-5 w-5" />
-                  <span>Camera AR</span>
+                  <span>View in AR</span>
                 </button>
               )}
               <Utensils className="h-6 w-6 text-gray-700" />
@@ -103,7 +103,7 @@ function App() {
               onClick={startAR}
               className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
-              Start Camera AR
+              Start AR Experience
             </button>
           ) : (
             <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 max-w-md mx-auto">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChefHat, Utensils, Eye, ShoppingCart } from 'lucide-react';
-import SimpleCameraAR from './components/SimpleCameraAR';
+import WebARMenu from './components/WebARMenu';
 import MenuCard from './components/MenuCard';
 import LoadingSpinner from './components/LoadingSpinner';
 import { menuItems } from './data/menuData';
@@ -56,7 +56,7 @@ function App() {
   if (isARActive) {
     return (
       <div className="fixed inset-0 bg-black">
-        <SimpleCameraAR onClose={stopAR} menuItems={menuItems} />
+        <ARMenu onClose={stopAR} menuItems={menuItems} />
       </div>
     );
   }
@@ -78,7 +78,7 @@ function App() {
                   className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
                 >
                   <Eye className="h-5 w-5" />
-                  <span>Camera AR</span>
+                  <span>View in AR</span>
                 </button>
               )}
               <Utensils className="h-6 w-6 text-gray-700" />
@@ -94,21 +94,21 @@ function App() {
             Experience Our Menu in <span className="text-amber-600">Augmented Reality</span>
           </h2>
           <p className="text-xl text-gray-600 mb-8">
-            Use your device camera to see virtual dishes placed on any flat surface
+            Place virtual dishes on your table and see them come to life before you order
           </p>
           {isCheckingAR ? (
-            <LoadingSpinner size="lg" message="Checking camera access..." />
+            <LoadingSpinner size="lg" message="Checking AR support..." />
           ) : isARSupported ? (
             <button
               onClick={startAR}
               className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
-              Start Camera AR
+              Start AR Experience
             </button>
           ) : (
             <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 max-w-md mx-auto">
               <p className="text-yellow-800">
-                Camera access required for AR experience. Please allow camera access and refresh the page.
+                AR not supported on this device. Browse our menu below.
               </p>
             </div>
           )}
