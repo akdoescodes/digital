@@ -488,51 +488,14 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
         {/* Surface detection grid overlay */}
         {surfaceDetected && !isCalibrating && (
           <div className="absolute inset-0 pointer-events-none">
-            {/* Main detection grid */}
             <div className="w-full h-full" style={{
               backgroundImage: `
-                linear-gradient(rgba(0,255,0,0.3) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,255,0,0.3) 1px, transparent 1px)
+                linear-gradient(rgba(0,255,0,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,0,0.1) 1px, transparent 1px)
               `,
               backgroundSize: '50px 50px',
               animation: 'pulse 2s ease-in-out infinite'
             }}></div>
-            
-            {/* Surface boundary indicators */}
-            <div className="absolute top-1/4 left-1/4 right-1/4 bottom-1/4 border-2 border-green-400 border-dashed animate-pulse rounded-lg">
-              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-3 py-1 rounded-full text-xs">
-                DETECTED SURFACE
-              </div>
-            </div>
-            
-            {/* Corner markers */}
-            <div className="absolute top-1/4 left-1/4 w-8 h-8 border-l-4 border-t-4 border-green-400"></div>
-            <div className="absolute top-1/4 right-1/4 w-8 h-8 border-r-4 border-t-4 border-green-400"></div>
-            <div className="absolute bottom-1/4 left-1/4 w-8 h-8 border-l-4 border-b-4 border-green-400"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-8 h-8 border-r-4 border-b-4 border-green-400"></div>
-          </div>
-        )}
-
-        {/* Real-time surface scanning feedback */}
-        {isCalibrating && !isLoading && surfaceQuality > 30 && (
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="w-full h-full" style={{
-              backgroundImage: `
-                linear-gradient(rgba(255,255,0,0.2) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,0,0.2) 1px, transparent 1px)
-              `,
-              backgroundSize: '40px 40px',
-              animation: 'pulse 1s ease-in-out infinite'
-            }}></div>
-            
-            {/* Scanning line effect */}
-            <div 
-              className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent"
-              style={{
-                top: '50%',
-                animation: 'scan 2s ease-in-out infinite'
-              }}
-            ></div>
           </div>
         )}
       </div>

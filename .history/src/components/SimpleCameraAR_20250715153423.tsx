@@ -28,6 +28,7 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
   const [surfaceDetected, setSurfaceDetected] = useState(false);
   const [isCalibrating, setIsCalibrating] = useState(true);
   const [deviceStability, setDeviceStability] = useState(0);
+  const [motionData, setMotionData] = useState({ x: 0, y: 0, z: 0 });
   const [surfaceQuality, setSurfaceQuality] = useState(0);
 
   // Surface detection using device motion and image analysis
@@ -35,7 +36,7 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
     let mounted = true;
     let motionListener: ((event: DeviceMotionEvent) => void) | null = null;
     let orientationListener: ((event: DeviceOrientationEvent) => void) | null = null;
-    let stabilityTimer: number;
+    let stabilityTimer: NodeJS.Timeout;
     
     const requestMotionPermission = async () => {
       // Request device motion permission on iOS
@@ -82,6 +83,7 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
           const stability = Math.max(0, Math.min(100, 100 - variance * 10));
           
           setDeviceStability(stability);
+          setMotionData({ x: acceleration.x, y: acceleration.y, z: acceleration.z });
           
           // Surface detection logic
           const currentTime = Date.now();
@@ -94,9 +96,9 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
             const hasGoodAngle = Math.abs(acceleration.x) < 3 && Math.abs(acceleration.y) < 3;
             
             if (isStable && isPointingDown && hasGoodAngle) {
-              setSurfaceQuality(prev => Math.min(100, prev + 5));
+              setSurfaceQuality(Math.min(100, surfaceQuality + 5));
             } else {
-              setSurfaceQuality(prev => Math.max(0, prev - 2));
+              setSurfaceQuality(Math.max(0, surfaceQuality - 2));
             }
           }
         }
@@ -105,7 +107,7 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
       orientationListener = (event: DeviceOrientationEvent) => {
         if (!mounted) return;
         // Additional orientation data for better surface detection
-        const { beta, gamma } = event;
+        const { alpha, beta, gamma } = event;
         if (beta !== null && gamma !== null) {
           // Check if device is held relatively flat
           const isFlatish = Math.abs(beta - 90) < 30 && Math.abs(gamma) < 30;
@@ -123,7 +125,7 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
     startMotionDetection();
 
     // Surface detection based on stability and quality
-    stabilityTimer = window.setInterval(() => {
+    stabilityTimer = setInterval(() => {
       if (!mounted) return;
       
       if (surfaceQuality > 80 && deviceStability > 70) {
@@ -148,7 +150,7 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
         window.removeEventListener('deviceorientation', orientationListener);
       }
       if (stabilityTimer) {
-        window.clearInterval(stabilityTimer);
+        clearInterval(stabilityTimer);
       }
     };
   }, [deviceStability, surfaceQuality, surfaceDetected]);
@@ -327,53 +329,10 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
       {/* Calibration overlay */}
       {isCalibrating && !isLoading && (
         <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-          <div className="text-center text-white max-w-sm mx-auto p-6">
+          <div className="text-center text-white">
             <Target className="h-16 w-16 mx-auto mb-4 text-blue-400 animate-pulse" />
-            <h3 className="text-xl font-bold mb-4">Surface Detection</h3>
-            
-            {/* Surface quality indicator */}
-            <div className="mb-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span>Surface Quality</span>
-                <span>{Math.round(surfaceQuality)}%</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-3">
-                <div 
-                  className={`h-3 rounded-full transition-all duration-300 ${
-                    surfaceQuality > 80 ? 'bg-green-500' : 
-                    surfaceQuality > 50 ? 'bg-yellow-500' : 'bg-red-500'
-                  }`}
-                  style={{ width: `${surfaceQuality}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Device stability indicator */}
-            <div className="mb-6">
-              <div className="flex justify-between text-sm mb-2">
-                <span>Device Stability</span>
-                <span>{Math.round(deviceStability)}%</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-3">
-                <div 
-                  className={`h-3 rounded-full transition-all duration-300 ${
-                    deviceStability > 70 ? 'bg-green-500' : 
-                    deviceStability > 40 ? 'bg-yellow-500' : 'bg-red-500'
-                  }`}
-                  style={{ width: `${deviceStability}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Instructions */}
-            <div className="text-sm text-gray-300 space-y-2">
-              <p>1. Point camera at a flat surface (table, floor)</p>
-              <p>2. Hold device steady for better detection</p>
-              <p>3. Keep camera perpendicular to surface</p>
-              {surfaceQuality > 50 && (
-                <p className="text-yellow-400 font-medium">Almost there! Keep steady...</p>
-              )}
-            </div>
+            <p className="text-lg">Detecting surface...</p>
+            <p className="text-sm text-gray-400 mt-2">Point camera at a flat surface</p>
           </div>
         </div>
       )}
@@ -390,17 +349,12 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
         <div className="flex items-center space-x-2">
           {surfaceDetected && (
             <div className="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium animate-pulse">
-              SURFACE LOCKED ✓
-            </div>
-          )}
-          {isCalibrating && !isLoading && (
-            <div className="bg-yellow-600 text-white px-3 py-1 rounded-full text-xs font-medium">
-              SCANNING... {Math.round(surfaceQuality)}%
+              SURFACE DETECTED
             </div>
           )}
           <div className="bg-black bg-opacity-70 text-white px-4 py-2 rounded-full backdrop-blur-sm">
             <span className="text-sm font-medium">
-              {surfaceDetected ? 'Tap to place cubes' : 'Point at flat surface'}
+              {surfaceDetected ? 'Tap to place items' : 'Finding surface...'}
             </span>
           </div>
         </div>
@@ -488,51 +442,14 @@ export default function SimpleCameraAR({ onClose, menuItems }: SimpleCameraARPro
         {/* Surface detection grid overlay */}
         {surfaceDetected && !isCalibrating && (
           <div className="absolute inset-0 pointer-events-none">
-            {/* Main detection grid */}
             <div className="w-full h-full" style={{
               backgroundImage: `
-                linear-gradient(rgba(0,255,0,0.3) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,255,0,0.3) 1px, transparent 1px)
+                linear-gradient(rgba(0,255,0,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,0,0.1) 1px, transparent 1px)
               `,
               backgroundSize: '50px 50px',
               animation: 'pulse 2s ease-in-out infinite'
             }}></div>
-            
-            {/* Surface boundary indicators */}
-            <div className="absolute top-1/4 left-1/4 right-1/4 bottom-1/4 border-2 border-green-400 border-dashed animate-pulse rounded-lg">
-              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-3 py-1 rounded-full text-xs">
-                DETECTED SURFACE
-              </div>
-            </div>
-            
-            {/* Corner markers */}
-            <div className="absolute top-1/4 left-1/4 w-8 h-8 border-l-4 border-t-4 border-green-400"></div>
-            <div className="absolute top-1/4 right-1/4 w-8 h-8 border-r-4 border-t-4 border-green-400"></div>
-            <div className="absolute bottom-1/4 left-1/4 w-8 h-8 border-l-4 border-b-4 border-green-400"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-8 h-8 border-r-4 border-b-4 border-green-400"></div>
-          </div>
-        )}
-
-        {/* Real-time surface scanning feedback */}
-        {isCalibrating && !isLoading && surfaceQuality > 30 && (
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="w-full h-full" style={{
-              backgroundImage: `
-                linear-gradient(rgba(255,255,0,0.2) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,0,0.2) 1px, transparent 1px)
-              `,
-              backgroundSize: '40px 40px',
-              animation: 'pulse 1s ease-in-out infinite'
-            }}></div>
-            
-            {/* Scanning line effect */}
-            <div 
-              className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent"
-              style={{
-                top: '50%',
-                animation: 'scan 2s ease-in-out infinite'
-              }}
-            ></div>
           </div>
         )}
       </div>
