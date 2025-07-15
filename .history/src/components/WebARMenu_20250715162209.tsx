@@ -150,6 +150,63 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
     return { scene, camera, renderer };
   };
 
+  // Create 3D model for menu item
+  const createMenuItemMesh = (item: MenuItem): THREE.Mesh => {
+    let geometry: THREE.BufferGeometry;
+    
+    // Different geometries based on food category
+    switch (item.category.toLowerCase()) {
+      case 'pizza':
+        geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.02, 16);
+        break;
+      case 'soup':
+        geometry = new THREE.SphereGeometry(0.08, 16, 16);
+        break;
+      case 'dessert':
+        geometry = new THREE.ConeGeometry(0.08, 0.15, 8);
+        break;
+      case 'seafood':
+        geometry = new THREE.OctahedronGeometry(0.08);
+        break;
+      case 'salad':
+        geometry = new THREE.DodecahedronGeometry(0.08);
+        break;
+      default:
+        geometry = new THREE.BoxGeometry(0.1, 0.08, 0.1);
+    }
+
+    // Material with category-based color
+    const getColor = () => {
+      switch (item.category.toLowerCase()) {
+        case 'pizza': return 0xFF6B35;
+        case 'soup': return 0xF7931E;
+        case 'dessert': return 0x8B4513;
+        case 'seafood': return 0x4682B4;
+        case 'salad': return 0x32CD32;
+        case 'premium': return 0x9B59B6;
+        default: return 0xD97706;
+      }
+    };
+
+    const material = new THREE.MeshPhongMaterial({ 
+      color: getColor(),
+      shininess: 100,
+      transparent: true,
+      opacity: 0.9
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    
+    // Add floating animation
+    mesh.userData = {
+      item,
+      originalY: 0,
+      animationTime: Math.random() * Math.PI * 2
+    };
+
+    return mesh;
+  };
+
   // Create 3D model instance for placement
   const createObjModelInstance = (): THREE.Group | null => {
     if (!objModel) return null;
@@ -506,18 +563,18 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
           {isScanning && (
             <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium animate-pulse flex items-center">
               <Scan className="h-3 w-3 mr-1" />
-              SLAM MAPPING
+              DETECTING PLANES
             </div>
           )}
           {detectedPlanes.length > 0 && (
-            <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
+            <div className="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
               <Target className="h-3 w-3 mr-1" />
-              {detectedPlanes.length} SURFACES TRACKED
+              {detectedPlanes.length} SURFACES FOUND
             </div>
           )}
           <div className="bg-black bg-opacity-70 text-white px-4 py-2 rounded-full backdrop-blur-sm">
             <span className="text-sm font-medium">
-              {detectedPlanes.length > 0 ? 'Tap to place 3D model' : 'Scanning surfaces...'}
+              {detectedPlanes.length > 0 ? 'Tap to place items' : 'Scan for surfaces...'}
             </span>
           </div>
         </div>
@@ -558,7 +615,7 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
           </div>
           
           <div className="text-center mt-2 text-white text-xs opacity-75">
-            3D Model: FinalBaseMesh.obj • {arItems.length} models placed • SLAM Tracking Active
+            Selected: {selectedItem.name} • {arItems.length} items placed • WebXR Plane Detection
           </div>
         </div>
       )}
@@ -567,11 +624,11 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
       {detectedPlanes.length === 0 && !isScanning && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
           <div className="bg-black bg-opacity-70 text-white px-6 py-4 rounded-lg backdrop-blur-sm border border-white/20">
-            <Scan className="h-8 w-8 mx-auto mb-2 text-purple-400 animate-spin" />
-            <p className="text-sm font-medium">SLAM mapping in progress</p>
-            <p className="text-xs opacity-75 mt-1">Move device to scan surfaces</p>
+            <Scan className="h-8 w-8 mx-auto mb-2 text-blue-400 animate-spin" />
+            <p className="text-sm font-medium">Point device at flat surfaces</p>
+            <p className="text-xs opacity-75 mt-1">Move slowly to detect planes</p>
             <div className="mt-2 text-xs text-gray-400">
-              3D Model Ready • Surface Tracking Active
+              WebXR Plane Detection Active
             </div>
           </div>
         </div>

@@ -150,6 +150,63 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
     return { scene, camera, renderer };
   };
 
+  // Create 3D model for menu item
+  const createMenuItemMesh = (item: MenuItem): THREE.Mesh => {
+    let geometry: THREE.BufferGeometry;
+    
+    // Different geometries based on food category
+    switch (item.category.toLowerCase()) {
+      case 'pizza':
+        geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.02, 16);
+        break;
+      case 'soup':
+        geometry = new THREE.SphereGeometry(0.08, 16, 16);
+        break;
+      case 'dessert':
+        geometry = new THREE.ConeGeometry(0.08, 0.15, 8);
+        break;
+      case 'seafood':
+        geometry = new THREE.OctahedronGeometry(0.08);
+        break;
+      case 'salad':
+        geometry = new THREE.DodecahedronGeometry(0.08);
+        break;
+      default:
+        geometry = new THREE.BoxGeometry(0.1, 0.08, 0.1);
+    }
+
+    // Material with category-based color
+    const getColor = () => {
+      switch (item.category.toLowerCase()) {
+        case 'pizza': return 0xFF6B35;
+        case 'soup': return 0xF7931E;
+        case 'dessert': return 0x8B4513;
+        case 'seafood': return 0x4682B4;
+        case 'salad': return 0x32CD32;
+        case 'premium': return 0x9B59B6;
+        default: return 0xD97706;
+      }
+    };
+
+    const material = new THREE.MeshPhongMaterial({ 
+      color: getColor(),
+      shininess: 100,
+      transparent: true,
+      opacity: 0.9
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    
+    // Add floating animation
+    mesh.userData = {
+      item,
+      originalY: 0,
+      animationTime: Math.random() * Math.PI * 2
+    };
+
+    return mesh;
+  };
+
   // Create 3D model instance for placement
   const createObjModelInstance = (): THREE.Group | null => {
     if (!objModel) return null;

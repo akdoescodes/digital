@@ -150,6 +150,63 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
     return { scene, camera, renderer };
   };
 
+  // Create 3D model for menu item
+  const createMenuItemMesh = (item: MenuItem): THREE.Mesh => {
+    let geometry: THREE.BufferGeometry;
+    
+    // Different geometries based on food category
+    switch (item.category.toLowerCase()) {
+      case 'pizza':
+        geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.02, 16);
+        break;
+      case 'soup':
+        geometry = new THREE.SphereGeometry(0.08, 16, 16);
+        break;
+      case 'dessert':
+        geometry = new THREE.ConeGeometry(0.08, 0.15, 8);
+        break;
+      case 'seafood':
+        geometry = new THREE.OctahedronGeometry(0.08);
+        break;
+      case 'salad':
+        geometry = new THREE.DodecahedronGeometry(0.08);
+        break;
+      default:
+        geometry = new THREE.BoxGeometry(0.1, 0.08, 0.1);
+    }
+
+    // Material with category-based color
+    const getColor = () => {
+      switch (item.category.toLowerCase()) {
+        case 'pizza': return 0xFF6B35;
+        case 'soup': return 0xF7931E;
+        case 'dessert': return 0x8B4513;
+        case 'seafood': return 0x4682B4;
+        case 'salad': return 0x32CD32;
+        case 'premium': return 0x9B59B6;
+        default: return 0xD97706;
+      }
+    };
+
+    const material = new THREE.MeshPhongMaterial({ 
+      color: getColor(),
+      shininess: 100,
+      transparent: true,
+      opacity: 0.9
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    
+    // Add floating animation
+    mesh.userData = {
+      item,
+      originalY: 0,
+      animationTime: Math.random() * Math.PI * 2
+    };
+
+    return mesh;
+  };
+
   // Create 3D model instance for placement
   const createObjModelInstance = (): THREE.Group | null => {
     if (!objModel) return null;
@@ -300,15 +357,9 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
             }
           }
 
-          // Animate placed 3D models
+          // Animate placed items
           arItems.forEach(arItem => {
-            if (arItem.mesh.userData && arItem.mesh.userData.isObjModel) {
-              // Subtle floating animation for OBJ models
-              arItem.mesh.userData.animationTime += 0.01;
-              arItem.mesh.position.y = arItem.mesh.userData.originalY + Math.sin(arItem.mesh.userData.animationTime) * 0.005;
-              arItem.mesh.rotation.y += 0.005; // Slow rotation
-            } else {
-              // Original animation for other meshes
+            if (arItem.mesh.userData) {
               arItem.mesh.userData.animationTime += 0.02;
               arItem.mesh.position.y = arItem.mesh.userData.originalY + Math.sin(arItem.mesh.userData.animationTime) * 0.01;
               arItem.mesh.rotation.y += 0.01;
@@ -325,47 +376,29 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
     }
   };
 
-  // Place 3D model on detected surface
+  // Place item on detected plane
   const placeItem = async () => {
-    if (!xrSession || !reticleRef.current || !reticleRef.current.visible || !objModel) return;
+    if (!xrSession || !reticleRef.current || !reticleRef.current.visible) return;
 
-    // Create instance of the OBJ model
-    const modelInstance = createObjModelInstance();
-    if (!modelInstance) return;
+    const mesh = createMenuItemMesh(selectedItem);
+    mesh.position.copy(reticleRef.current.position);
+    mesh.position.y += 0.05; // Slightly above the surface
+    mesh.userData.originalY = mesh.position.y;
 
-    // Position model on the surface
-    modelInstance.position.copy(reticleRef.current.position);
-    modelInstance.position.y += 0.02; // Slightly above the surface
-    modelInstance.userData.originalY = modelInstance.position.y;
+    sceneRef.current!.add(mesh);
 
-    // Align model with surface normal if needed
-    const targetPlane = detectedPlanes.find(plane => {
-      const distance = plane.center.distanceTo(reticleRef.current!.position);
-      return distance < 0.5; // Within 50cm of plane center
-    });
-
-    if (targetPlane) {
-      // Align model to surface normal
-      const up = new THREE.Vector3(0, 1, 0);
-      const quaternion = new THREE.Quaternion().setFromUnitVectors(up, targetPlane.normal);
-      modelInstance.quaternion.copy(quaternion);
-    }
-
-    sceneRef.current!.add(modelInstance);
-
-    // Try to create an anchor for SLAM persistence
+    // Try to create an anchor for persistence
     try {
       // Anchor creation would go here if supported
-      console.log('SLAM anchor created for model placement');
+      console.log('Anchors not supported in this implementation');
     } catch (error) {
-      console.log('SLAM anchors not supported, using position tracking');
+      console.log('Anchors not supported, placing without anchor');
     }
 
     const newArItem: ARItem = {
       id: Date.now().toString(),
       item: selectedItem,
-      mesh: modelInstance as any, // Cast to Mesh for compatibility
-      anchor: undefined
+      mesh
     };
 
     setArItems(prev => [...prev, newArItem]);
@@ -374,19 +407,6 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
   const clearItems = () => {
     arItems.forEach(item => {
       sceneRef.current?.remove(item.mesh);
-      // Clean up OBJ model instances
-      if (item.mesh.userData?.isObjModel) {
-        item.mesh.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.geometry?.dispose();
-            if (Array.isArray(child.material)) {
-              child.material.forEach(mat => mat.dispose());
-            } else {
-              child.material?.dispose();
-            }
-          }
-        });
-      }
     });
     setArItems([]);
   };
@@ -434,41 +454,30 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
       <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
         <div className="text-center text-white p-8">
           <Box className="h-20 w-20 mx-auto mb-6 text-blue-400" />
-          <h2 className="text-3xl font-bold mb-4">SLAM-Based WebAR</h2>
-          <p className="text-lg mb-2">Advanced 3D Model Placement</p>
-          <p className="text-sm text-gray-400 mb-8">Real-time surface mapping with OBJ model support</p>
+          <h2 className="text-3xl font-bold mb-4">Professional WebAR</h2>
+          <p className="text-lg mb-2">Advanced Plane Detection Ready</p>
+          <p className="text-sm text-gray-400 mb-8">Uses WebXR API for accurate surface mapping</p>
           
           <div className="space-y-4 mb-8">
             <div className="flex items-center justify-center text-green-400">
               <Target className="h-5 w-5 mr-2" />
-              <span>SLAM surface tracking</span>
+              <span>Real-time plane detection</span>
             </div>
             <div className="flex items-center justify-center text-green-400">
               <Scan className="h-5 w-5 mr-2" />
-              <span>3D model anchoring</span>
+              <span>Surface anchor tracking</span>
             </div>
             <div className="flex items-center justify-center text-green-400">
               <Zap className="h-5 w-5 mr-2" />
-              <span>OBJ model rendering</span>
+              <span>Native AR performance</span>
             </div>
           </div>
 
-          {!objModel && (
-            <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4 mb-6">
-              <p className="text-yellow-200 text-sm">Loading 3D model...</p>
-            </div>
-          )}
-
           <button
             onClick={startARSession}
-            disabled={!objModel}
-            className={`px-8 py-4 rounded-lg text-lg font-medium transition-colors shadow-lg ${
-              objModel 
-                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                : 'bg-gray-600 text-gray-300 cursor-not-allowed'
-            }`}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors shadow-lg"
           >
-            {objModel ? 'Start SLAM AR Session' : 'Loading Model...'}
+            Start WebAR Session
           </button>
           
           <div className="mt-6">
@@ -506,18 +515,18 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
           {isScanning && (
             <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium animate-pulse flex items-center">
               <Scan className="h-3 w-3 mr-1" />
-              SLAM MAPPING
+              DETECTING PLANES
             </div>
           )}
           {detectedPlanes.length > 0 && (
-            <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
+            <div className="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
               <Target className="h-3 w-3 mr-1" />
-              {detectedPlanes.length} SURFACES TRACKED
+              {detectedPlanes.length} SURFACES FOUND
             </div>
           )}
           <div className="bg-black bg-opacity-70 text-white px-4 py-2 rounded-full backdrop-blur-sm">
             <span className="text-sm font-medium">
-              {detectedPlanes.length > 0 ? 'Tap to place 3D model' : 'Scanning surfaces...'}
+              {detectedPlanes.length > 0 ? 'Tap to place items' : 'Scan for surfaces...'}
             </span>
           </div>
         </div>
@@ -558,7 +567,7 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
           </div>
           
           <div className="text-center mt-2 text-white text-xs opacity-75">
-            3D Model: FinalBaseMesh.obj • {arItems.length} models placed • SLAM Tracking Active
+            Selected: {selectedItem.name} • {arItems.length} items placed • WebXR Plane Detection
           </div>
         </div>
       )}
@@ -567,11 +576,11 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
       {detectedPlanes.length === 0 && !isScanning && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
           <div className="bg-black bg-opacity-70 text-white px-6 py-4 rounded-lg backdrop-blur-sm border border-white/20">
-            <Scan className="h-8 w-8 mx-auto mb-2 text-purple-400 animate-spin" />
-            <p className="text-sm font-medium">SLAM mapping in progress</p>
-            <p className="text-xs opacity-75 mt-1">Move device to scan surfaces</p>
+            <Scan className="h-8 w-8 mx-auto mb-2 text-blue-400 animate-spin" />
+            <p className="text-sm font-medium">Point device at flat surfaces</p>
+            <p className="text-xs opacity-75 mt-1">Move slowly to detect planes</p>
             <div className="mt-2 text-xs text-gray-400">
-              3D Model Ready • Surface Tracking Active
+              WebXR Plane Detection Active
             </div>
           </div>
         </div>
