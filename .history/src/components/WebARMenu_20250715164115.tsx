@@ -470,16 +470,6 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
           <div className="bg-blue-900 border border-blue-600 rounded-lg p-3 mb-4 text-sm">
             <p className="text-blue-200">💡 <strong>Quick Fix:</strong> Try Chrome Canary or enable WebXR Device API in chrome://flags</p>
           </div>
-          
-          {/* Debug info for model loading */}
-          <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 mb-4 text-xs">
-            <p className="text-gray-300 mb-2"><strong>Debug Info:</strong></p>
-            <p className="text-gray-400">🎯 3D Model: {objModel ? '✅ Loaded' : '⏳ Loading...'}</p>
-            <p className="text-gray-400">🌐 WebXR: {navigator.xr ? '✅ Available' : '❌ Not Found'}</p>
-            <p className="text-gray-400">📱 User Agent: {navigator.userAgent.includes('Android') ? 'Android' : 'Other'}</p>
-            <p className="text-gray-400">🔗 Protocol: {window.location.protocol}</p>
-          </div>
-          
           <button
             onClick={onClose}
             className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors"

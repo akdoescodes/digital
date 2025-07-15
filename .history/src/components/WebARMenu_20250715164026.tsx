@@ -439,12 +439,7 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
         <div className="text-center text-white">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
           <p className="text-lg">Checking WebAR Support...</p>
-          <p className="text-sm text-gray-400 mt-2">Initializing AR capabilities & loading 3D model</p>
-          <div className="mt-4 text-xs text-gray-500">
-            <p>🔍 Checking WebXR Device API...</p>
-            <p>📱 Testing immersive-ar session support...</p>
-            <p>🎯 Loading FinalBaseMesh.obj model...</p>
-          </div>
+          <p className="text-sm text-gray-400 mt-2">Initializing AR capabilities</p>
         </div>
       </div>
     );
@@ -455,31 +450,16 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
       <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
         <div className="text-center text-white p-8 max-w-md">
           <Camera className="h-16 w-16 mx-auto mb-4 text-red-400" />
-          <h2 className="text-2xl font-bold mb-4">WebAR Setup Required</h2>
+          <h2 className="text-2xl font-bold mb-4">WebAR Not Available</h2>
           <p className="mb-6 text-gray-300">{errorMessage}</p>
           <div className="text-sm text-gray-400 mb-6">
-            <p className="mb-2 font-semibold">For WebAR support:</p>
-            <ul className="list-disc list-inside space-y-2 text-left">
-              <li><strong>Android Device:</strong> Use Chrome or Edge browser</li>
-              <li><strong>Enable WebXR:</strong> Go to chrome://flags and enable WebXR</li>
-              <li><strong>ARCore:</strong> Install Google Play Services for AR</li>
-              <li><strong>HTTPS:</strong> Make sure you're on a secure connection</li>
-              <li><strong>Permissions:</strong> Allow camera access when prompted</li>
+            <p className="mb-2">For WebAR support, please use:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Chrome/Edge on Android</li>
+              <li>Safari on iOS (with WebXR enabled)</li>
+              <li>Make sure you're on HTTPS</li>
             </ul>
           </div>
-          <div className="bg-blue-900 border border-blue-600 rounded-lg p-3 mb-4 text-sm">
-            <p className="text-blue-200">💡 <strong>Quick Fix:</strong> Try Chrome Canary or enable WebXR Device API in chrome://flags</p>
-          </div>
-          
-          {/* Debug info for model loading */}
-          <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 mb-4 text-xs">
-            <p className="text-gray-300 mb-2"><strong>Debug Info:</strong></p>
-            <p className="text-gray-400">🎯 3D Model: {objModel ? '✅ Loaded' : '⏳ Loading...'}</p>
-            <p className="text-gray-400">🌐 WebXR: {navigator.xr ? '✅ Available' : '❌ Not Found'}</p>
-            <p className="text-gray-400">📱 User Agent: {navigator.userAgent.includes('Android') ? 'Android' : 'Other'}</p>
-            <p className="text-gray-400">🔗 Protocol: {window.location.protocol}</p>
-          </div>
-          
           <button
             onClick={onClose}
             className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors"
@@ -515,16 +495,9 @@ export default function WebARMenu({ onClose, menuItems }: WebARMenuProps) {
             </div>
           </div>
 
-          {!objModel ? (
+          {!objModel && (
             <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4 mb-6">
-              <div className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-yellow-300 border-t-transparent mr-2"></div>
-                <p className="text-yellow-200 text-sm">Loading 3D model (FinalBaseMesh.obj)...</p>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-green-900 border border-green-600 rounded-lg p-4 mb-6">
-              <p className="text-green-200 text-sm">✅ 3D model loaded successfully!</p>
+              <p className="text-yellow-200 text-sm">Loading 3D model...</p>
             </div>
           )}
 
